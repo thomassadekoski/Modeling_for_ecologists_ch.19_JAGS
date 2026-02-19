@@ -1,0 +1,42 @@
+model {
+
+  # -----------------
+  # Priors
+  # -----------------
+
+  occ_int ~ dunif(0, 1)          # occupancy intercept on probability scale
+  alpha_occ <- logit(occ_int)    # occupancy intercept on logit scale
+  beta_occ ~ dnorm(0, 0.0001)    # occupancy slope
+
+  p_int ~ dunif(0, 1)            # detection intercept on probability scale
+  alpha_p <- logit(p_int)        # detection intercept on logit scale
+  beta_p ~ dnorm(0, 0.0001)      # detection slope
+
+
+  # -----------------
+  # Likelihood
+  # -----------------
+
+  for (i in 1:nSites) {
+
+    # State process (true occupancy)
+    logit(psi[i]) <- alpha_occ + beta_occ * humidity[i]
+    z[i] ~ dbern(psi[i])
+
+    # Observation process (detection)
+    for (t in 1:nVisits) {
+
+      logit(p[i,t]) <- alpha_p + beta_p * humidity[i]
+      y[i,t] ~ dbern(z[i] * p[i,t])
+
+    }
+  }
+
+
+  # -----------------
+  # Derived quantity
+  # -----------------
+
+  occ_fs <- sum(z[])   # total number of occupied sites
+
+}
